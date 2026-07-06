@@ -249,7 +249,7 @@
                 if(i > 0) { ctx.beginPath(); ctx.moveTo(0, hny); ctx.lineTo(canvas.width, hny); ctx.stroke(); }
             }
 
-            const dPhi = totalPhase / M;
+            const dPhi = M > 1 ? totalPhase / (M - 1) : 0;
             let x = 0, y = 0;
             const coords = [[x, y]];
 
