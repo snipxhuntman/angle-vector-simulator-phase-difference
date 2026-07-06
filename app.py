@@ -2,16 +2,15 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-# Set up the web page title
 st.title("Phasor Addition Simulator")
 st.markdown("Adjust the sliders to see the individual waves (black) and the resultant wave (red).")
 
 # Interactive Sliders
-M = st.slider("Number of waves (M)", min_value=1, max_value=15, value=6, step=1)
-p_deg = st.slider("Phase difference in degrees (Δϕ)", min_value=0.0, max_value=180.0, value=22.5, step=1.0)
+# Added a strict upper limit to M to prevent visual clutter and lag
+M = st.slider("Number of waves (M)", min_value=1, max_value=20, value=6, step=1)
 
-# Convert phase difference to radians
-p = np.radians(p_deg)
+# Phase difference directly in radians (0 to 2π)
+p = st.slider("Phase difference in radians (Δϕ)", min_value=0.0, max_value=float(2 * np.pi), value=float(np.pi/8), step=0.05)
 
 # Initialize starting coordinates at origin (0,0)
 x_coords = [0]
@@ -41,18 +40,21 @@ fig.add_annotation(
     x=x_coords[-1], y=y_coords[-1],
     ax=x_coords[0], ay=y_coords[0],
     xref="x", yref="y", axref="x", ayref="y",
-    showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="red"
+    showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=3, arrowcolor="red"
 )
 
-# Calculate dynamic layout boundaries so the arrows always fit
-max_val = max(max(np.abs(x_coords)), max(np.abs(y_coords))) + 1
+# Fix the axis limits strictly based on M to prevent bounding box jitter
+# This keeps the UI incredibly smooth and stops "weird messes" during recalculation
+axis_limit = M * 1.05 
 
 fig.update_layout(
-    xaxis=dict(range=[-max_val, max_val], showgrid=True, zeroline=True),
-    yaxis=dict(range=[-max_val, max_val], showgrid=True, zeroline=True, scaleanchor="x", scaleratio=1), # scaleanchor ensures perfectly square proportions
+    xaxis=dict(range=[-axis_limit, axis_limit], showgrid=True, zeroline=True),
+    yaxis=dict(range=[-axis_limit, axis_limit], showgrid=True, zeroline=True, scaleanchor="x", scaleratio=1),
     width=600, height=600,
-    plot_bgcolor="white"
+    plot_bgcolor="white",
+    uirevision="constant", # This tells Plotly not to reset the zoom/pan/layout on every update
+    margin=dict(l=20, r=20, t=20, b=20) # Reduces whitespace for a cleaner Notion embed
 )
 
-# Display the plot in the app
-st.plotly_chart(fig)
+# use_container_width makes it auto-fit the Notion block nicely
+st.plotly_chart(fig, use_container_width=True)
